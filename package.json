@@ -1,0 +1,21 @@
+{
+  "name": "atelier-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "lint": "tsc --noEmit",
+    "smoke": "bun run scripts/smoke.ts",
+    "sync-roundtrip": "bun run scripts/sync-roundtrip.ts"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "mongodb": "^6.17.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.2"
+  }
+}

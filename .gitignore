@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Lokale Secrets / Env (niemals committen)
+.env
+.env.local
+.env.*.local
+
+# Lokaler Datei-Storage (ATELIER_STORAGE_ROOT)
+data/
+
+# Logs & Temp
+*.log
+.DS_Store
