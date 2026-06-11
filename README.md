@@ -1,4 +1,4 @@
-# atelier-api
+﻿# atelier-api
 
 Backend-Service für **atelier by feelgood** — das GTA-V-Addon-Clothing-Tool
 (Tauri-Desktop-App + kollaboratives Backend). Discord-Login, Device-Tokens,
@@ -271,16 +271,17 @@ curl http://127.0.0.1:3095/api/v1/internal/ping -H "x-fg-service-token: <ATELIER
   Reverse-Proxy `ATELIER_TRUST_PROXY=1` setzen. Beispiel:
 
   ```sh
+  docker build -t atelier-api .
   docker run -d --name atelier-api \
     -p 3095:3095 \
     -v atelier-data:/data \
     --env-file .env.docker \
-    ghcr.io/feelgoodrp-com/atelier-api:master
+    atelier-api
   ```
 
 - **CI** (`.github/workflows/ci.yml`, PRs + master + Tags): Typecheck, dann
   die komplette Smoke-Suite (120 Checks) + Sync-Roundtrip (15 Checks) gegen
   einen live gestarteten Server mit Dev-Fake-Auth und einem
-  `mongo:7`-Service-Container. Auf master/Tags wird zusaetzlich das
-  Docker-Image nach `ghcr.io/feelgoodrp-com/atelier-api` gepusht
-  (Tags: Branch, SemVer bei `vX.Y.Z`, Commit-SHA).
+  `mongo:7`-Service-Container, plus `docker build` als reines
+  Dockerfile-Gate. Es wird BEWUSST kein Image in eine Registry gepusht —
+  das Deployment baut das Image direkt auf dem Zielhost aus dem Repo.
