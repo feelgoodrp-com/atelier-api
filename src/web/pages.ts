@@ -141,7 +141,7 @@ export function renderPageHtml(opts: PageOptions): string {
       <h1>${escapeHtml(opts.heading)}</h1>
       <p class="message">${escapeHtml(opts.message)}</p>
       ${detail}
-      <div class="foot">atelier-api · Feelgood Community</div>
+      <div class="foot">atelier-api</div>
     </main>
   </div>
 </body>
