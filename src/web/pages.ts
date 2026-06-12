@@ -134,7 +134,7 @@ export function renderPageHtml(opts: PageOptions): string {
       <img class="logo" src="/logo.png" alt="" draggable="false"
            onerror="this.style.display='none'" />
       <div class="wordmark"><b>atelier</b><span>by feelgood</span>${badge}</div>
-      <p class="tag">Sync-Server der atelier-Desktop-App für die Feelgood-Community.</p>
+      <p class="tag">Sync-Server der atelier-Desktop-App.</p>
     </div>
     <main class="card">
       ${VARIANT_ICON[opts.variant]}
