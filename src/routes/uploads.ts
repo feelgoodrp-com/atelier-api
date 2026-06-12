@@ -18,7 +18,14 @@ import type { Router } from "../router";
 import type { Env } from "../env";
 import { json, err, readJsonBody } from "../http";
 import { requireUser } from "../auth/require";
-import { deleteTmp, finalizeFromTmp, isAssetKind, isSha256Hex, tmpPathFor } from "../storage/cas";
+import {
+  casExists,
+  deleteTmp,
+  finalizeFromTmp,
+  isAssetKind,
+  isSha256Hex,
+  tmpPathFor,
+} from "../storage/cas";
 import { assetsCol } from "../models/atelierAsset";
 import { uploadsCol, UPLOAD_TTL_MS, type AtelierUpload } from "../models/atelierUpload";
 import { logActivity } from "../models/activity";
@@ -43,8 +50,14 @@ export function registerUploadRoutes(router: Router, env: Env): void {
     if (typeof size !== "number" || !Number.isInteger(size) || size < 1) return err("invalid_size", 400);
     if (size > env.ATELIER_MAX_ASSET_BYTES) return err("asset_too_large", 413);
 
+    // Only short-circuit when the file is ACTUALLY on disk. If the CAS volume
+    // was wiped but the Mongo doc survived, allow a fresh upload to restore the
+    // file (the complete handler's asset upsert is idempotent).
     const assets = await assetsCol();
-    if (await assets.findOne({ sha256 })) return err("already_exists", 409);
+    const existingAsset = await assets.findOne({ sha256 });
+    if (existingAsset && (await casExists(sha256, existingAsset.kind))) {
+      return err("already_exists", 409);
+    }
 
     // Resume: an open session of the same user for the same content.
     const uploads = await uploadsCol();

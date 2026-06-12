@@ -56,9 +56,16 @@ export function registerAssetRoutes(router: Router, env: Env): void {
 
     const assets = await assetsCol();
     const found = await assets
-      .find({ sha256: { $in: [...shas] } }, { projection: { sha256: 1 } })
+      .find({ sha256: { $in: [...shas] } }, { projection: { sha256: 1, kind: 1 } })
       .toArray();
-    const present = new Set(found.map((a) => a.sha256));
+    // A hash only counts as "present" when its file is ALSO on disk. A wiped
+    // CAS volume can leave the Mongo doc behind; reporting "present" then would
+    // make clients skip re-uploading a file the server no longer has, so the
+    // pull/clone of that revision would 404 with asset_not_found forever.
+    const present = new Set<string>();
+    for (const a of found) {
+      if (await casExists(a.sha256, a.kind)) present.add(a.sha256);
+    }
 
     return json({
       missing: [...shas].filter((s) => !present.has(s)),
