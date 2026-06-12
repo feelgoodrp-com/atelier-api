@@ -1,7 +1,8 @@
 /**
  * Browser-facing HTML pages in the Feelgood design — used by the endpoints a
- * human actually SEES (OAuth flow errors, the landing page). Self-contained:
- * dark glassmorphism card over animated blurry blobs, atelier logo via
+ * human actually SEES (OAuth flow errors, the landing page). Matches the
+ * desktop login: hero video backdrop (GET /hero.webm) under a gradient veil,
+ * big atelier branding on the left, a glass status card on the right; logo via
  * GET /logo.png, German copy. JSON stays the contract for API clients; these
  * pages are only returned where a browser is the consumer.
  */
@@ -57,45 +58,46 @@ export function renderPageHtml(opts: PageOptions): string {
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; position: relative;
   }
-  /* Animated blurry blobs (Feelgood blurple family) */
-  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .32; pointer-events: none; }
-  .blob.b1 { width: 480px; height: 480px; background: #5865F2; top: -120px; left: -100px; animation: drift1 22s ease-in-out infinite alternate; }
-  .blob.b2 { width: 420px; height: 420px; background: #7289DA; bottom: -140px; right: -80px; animation: drift2 26s ease-in-out infinite alternate; }
-  .blob.b3 { width: 320px; height: 320px; background: #3b2f8f; top: 45%; left: 60%; animation: drift3 19s ease-in-out infinite alternate; }
-  @keyframes drift1 { to { transform: translate(120px, 80px) scale(1.15); } }
-  @keyframes drift2 { to { transform: translate(-100px, -70px) scale(1.2); } }
-  @keyframes drift3 { to { transform: translate(-80px, 60px) scale(0.85); } }
-  /* Subtle grid like the app */
-  .grid { position: absolute; inset: 0; pointer-events: none;
+  /* Hero video backdrop + gradient veil + subtle grid (matches the app login) */
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .veil { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(11,11,11,.78), rgba(11,11,11,.62) 45%, rgba(11,11,11,.92)); }
+  .grid { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
     background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
     background-size: 50px 50px; }
+  /* Split stage: big branding left, card right */
+  .stage { position: relative; z-index: 1; width: 100%; max-width: 1080px;
+    padding: 0 56px; display: flex; align-items: center; justify-content: space-between; gap: 56px; }
+  .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+    animation: rise .5s ease-out both; }
+  .brand .logo { width: 104px; height: 104px; user-select: none; }
+  .wordmark { display: flex; align-items: baseline; gap: 12px; }
+  .wordmark b { font-size: 46px; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+  .wordmark span { font-size: 16px; font-weight: 500; color: #7289DA; }
+  .badge { font-size: 11px; color: rgba(255,255,255,.5); background: rgba(255,255,255,.08);
+    border-radius: 999px; padding: 3px 9px; align-self: center; }
+  .tag { font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.55); max-width: 360px; }
   /* Glass card */
   .card {
-    position: relative; z-index: 1;
+    position: relative;
     background: rgba(0,0,0,.55);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 20px;
-    padding: 44px 48px;
-    max-width: 440px; width: calc(100% - 48px);
+    padding: 40px 44px;
+    width: 380px; flex-shrink: 0;
     text-align: center;
-    animation: rise .5s ease-out both;
+    animation: rise .5s ease-out .08s both;
     box-shadow: 0 24px 80px rgba(0,0,0,.45);
   }
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
-  .logo { width: 72px; height: 72px; margin-bottom: 14px; user-select: none; }
-  .wordmark { display: flex; align-items: baseline; justify-content: center; gap: 7px; margin-bottom: 26px; }
-  .wordmark b { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
-  .wordmark span { font-size: 12px; font-weight: 500; color: #7289DA; }
-  .badge { font-size: 10px; color: rgba(255,255,255,.45); background: rgba(255,255,255,.08);
-    border-radius: 999px; padding: 2px 8px; margin-left: 4px; }
   h1 { font-size: 19px; font-weight: 600; margin-bottom: 10px; }
   p.message { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,.55); }
   p.detail { margin-top: 14px; font-family: ui-monospace, Consolas, monospace; font-size: 11px;
     color: rgba(255,255,255,.35); word-break: break-all; }
-  .foot { margin-top: 28px; font-size: 10.5px; color: rgba(255,255,255,.25); }
+  .foot { margin-top: 26px; font-size: 10.5px; color: rgba(255,255,255,.25); }
   /* Status icons */
   .icon { width: 52px; height: 52px; margin: 0 auto 18px; }
   .icon svg { width: 100%; height: 100%; }
@@ -108,21 +110,40 @@ export function renderPageHtml(opts: PageOptions): string {
     border: 3px solid rgba(255,255,255,.12); border-top-color: #5865F2;
     animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  /* Stack on narrow viewports */
+  @media (max-width: 780px) {
+    .stage { flex-direction: column; gap: 32px; padding: 0 24px; text-align: center; }
+    .brand { align-items: center; }
+    .tag { display: none; }
+    .card { width: 100%; max-width: 400px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brand, .card { animation: none; }
+  }
 </style>
 </head>
 <body>
-  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <video class="bg" autoplay loop muted playsinline aria-hidden="true"
+         onerror="this.style.display='none'">
+    <source src="/hero.webm" type="video/webm" />
+  </video>
+  <div class="veil"></div>
   <div class="grid"></div>
-  <main class="card">
-    <img class="logo" src="/logo.png" alt="" draggable="false"
-         onerror="this.style.display='none'" />
-    <div class="wordmark"><b>atelier</b><span>by feelgood</span>${badge}</div>
-    ${VARIANT_ICON[opts.variant]}
-    <h1>${escapeHtml(opts.heading)}</h1>
-    <p class="message">${escapeHtml(opts.message)}</p>
-    ${detail}
-    <div class="foot">atelier-api · Feelgood Community</div>
-  </main>
+  <div class="stage">
+    <div class="brand">
+      <img class="logo" src="/logo.png" alt="" draggable="false"
+           onerror="this.style.display='none'" />
+      <div class="wordmark"><b>atelier</b><span>by feelgood</span>${badge}</div>
+      <p class="tag">Sync-Server der atelier-Desktop-App für die Feelgood-Community.</p>
+    </div>
+    <main class="card">
+      ${VARIANT_ICON[opts.variant]}
+      <h1>${escapeHtml(opts.heading)}</h1>
+      <p class="message">${escapeHtml(opts.message)}</p>
+      ${detail}
+      <div class="foot">atelier-api · Feelgood Community</div>
+    </main>
+  </div>
 </body>
 </html>`;
 }

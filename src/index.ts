@@ -87,6 +87,19 @@ async function main() {
       : json({ error: "not_found" }, 404),
   );
 
+  // Hero video backdrop for the browser-facing HTML pages (same origin).
+  const heroFile = Bun.file(new URL("../assets/hero-desktop.webm", import.meta.url));
+  router.get("/hero.webm", async () =>
+    (await heroFile.exists())
+      ? new Response(heroFile, {
+          headers: {
+            "content-type": "video/webm",
+            "cache-control": "public, max-age=86400",
+          },
+        })
+      : json({ error: "not_found" }, 404),
+  );
+
   // Service-to-service probe (header x-fg-service-token) — consumers come later.
   router.get("/api/v1/internal/ping", ({ req }) => {
     const fail = requireService(req, env);
