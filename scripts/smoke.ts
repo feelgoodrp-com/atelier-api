@@ -8,9 +8,11 @@
  * the fake discord id listed in ATELIER_ADMIN_DISCORD_IDS (admin scenario).
  * Exercises: health, fake login (admin + second pending user), code exchange,
  * pending gate, admin approve/lock/role, refresh rotation, logout, service token,
- * CAS chunk uploads (resume + ranged download), packs/revisions,
- * drawable locks + WebSocket collab (rooms, presence, lock broadcasts) and
- * server-side builds + publish + registry (artifact ZIP, cache, service lane).
+ * CAS chunk uploads (resume + ranged download), packs/revisions (team-wide
+ * access: every approved user can list/read/clone any pack, viewer downgrade
+ * blocks writes), drawable locks + WebSocket collab (rooms, presence, lock
+ * broadcasts) and server-side builds + publish + registry (artifact ZIP,
+ * cache, service lane).
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -559,8 +561,20 @@ async function main() {
   const noHead = await api(`/api/v1/packs/${packId}/revisions/head/manifest`, adminTok);
   check("manifest head with 0 revisions -> 404", noHead.status === 404, noHead);
 
+  // Team-wide access: user2 is approved but NOT a member of this pack here, so
+  // these prove the pure team default (every approved user reaches any pack).
   const foreignGet = await api(`/api/v1/packs/${packId}`, viewerTok);
-  check("non-member GET pack -> 403", foreignGet.status === 403, foreignGet);
+  check("approved non-member GET pack -> 200 (team access)", foreignGet.status === 200, foreignGet);
+
+  const teamList = await api("/api/v1/packs", viewerTok);
+  check(
+    "approved non-member sees owner's pack in list",
+    teamList.status === 200 && teamList.body?.packs?.some((p: any) => p.packId === packId),
+    teamList.body,
+  );
+
+  const teamGet2 = await api(`/api/v1/packs/${packId}`, viewerTok);
+  check("approved non-member GET pack -> 200", teamGet2.status === 200, teamGet2);
 
   const addMember = await api(`/api/v1/packs/${packId}/members`, adminTok, {
     method: "POST",
@@ -573,7 +587,7 @@ async function main() {
   );
 
   const viewerPacks = await api("/api/v1/packs", viewerTok);
-  check("viewer sees pack in list", viewerPacks.status === 200 && viewerPacks.body?.packs?.some((p: any) => p.packId === packId), viewerPacks.body);
+  check("team user (now viewer member) sees pack in list", viewerPacks.status === 200 && viewerPacks.body?.packs?.some((p: any) => p.packId === packId), viewerPacks.body);
 
   const drawable = {
     id: randomUUID(),
@@ -629,6 +643,19 @@ async function main() {
     headManifest.status === 200 && headManifest.body?.revision?.revision === 1 && headManifest.body?.revision?.drawables?.length === 1,
     headManifest.body,
   );
+
+  // Team user pulls the head manifest + a referenced asset (the clone flow on
+  // the desktop relies on both). viewerTok has at least read access.
+  const teamHead = await api(`/api/v1/packs/${packId}/revisions/head/manifest`, viewerTok);
+  check(
+    "team user GET head manifest -> 200",
+    teamHead.status === 200 && teamHead.body?.revision?.revision === 1,
+    teamHead.body,
+  );
+  const teamDl = await fetch(`${BASE}/api/v1/assets/${TEST_ASSET_SHA}`, {
+    headers: { authorization: `Bearer ${viewerTok}` },
+  });
+  check("team user downloads referenced asset -> 200", teamDl.status === 200, teamDl.status);
 
   const viewerRevList = await api(`/api/v1/packs/${packId}/revisions`, viewerTok);
   check(

@@ -1,8 +1,8 @@
 /**
  * Pack + revision endpoints:
  *   POST   /api/v1/packs                                    create (any approved user)
- *   GET    /api/v1/packs                                    list own/member packs
- *   GET    /api/v1/packs/:packId                            single pack
+ *   GET    /api/v1/packs                                    list ALL non-archived packs (team-wide)
+ *   GET    /api/v1/packs/:packId                            single pack (any approved user)
  *   PATCH  /api/v1/packs/:packId                            rename/description (owner/editor)
  *   DELETE /api/v1/packs/:packId                            archive (owner)
  *   POST   /api/v1/packs/:packId/members                    add/replace member (owner)
@@ -11,6 +11,11 @@
  *   GET    /api/v1/packs/:packId/revisions/:rev/manifest    full doc (":rev" number or "head")
  *   POST   /api/v1/packs/:packId/revisions                  commit new head (owner/editor)
  *   POST   /api/v1/packs/:packId/publish                    publish to the registry (owner)
+ *
+ * Access model (team-wide): every approved user has "editor" access to every
+ * pack by default — list/read/PATCH/commit revisions are open to the whole
+ * team. owner-only ops (members, publish, archive) stay gated to the creator/
+ * admin; an explicit member entry can downgrade a user to read-only "viewer".
  *
  * Concurrency: a revision POST carries the baseRevision it was built on.
  * The head bump is an atomic findOneAndUpdate on { packId, headRevision:
@@ -49,7 +54,11 @@ const DISCORD_ID_RE = /^\d{5,25}$/u;
 const PUBLISH_TARGET_RE = /^[a-z0-9_-]{1,32}$/u;
 const MAX_PUBLISH_TARGETS = 10;
 
-/** Load a non-archived pack and resolve the caller's role (404/403 as Response). */
+/**
+ * Load a non-archived pack and resolve the caller's role (404 as Response).
+ * Team-wide access: any approved user resolves to at least "editor", so there
+ * is no per-pack 403 here — owner-only ops gate on role at the call site.
+ */
 export async function loadPackForUser(
   packId: string,
   user: AtelierUser,
@@ -58,7 +67,6 @@ export async function loadPackForUser(
   const pack = await packs.findOne({ packId, archivedAt: null });
   if (!pack) return err("pack_not_found", 404);
   const role = packRoleFor(pack, user);
-  if (!role) return err("forbidden", 403);
   return { pack, role };
 }
 
@@ -102,18 +110,14 @@ export function registerPackRoutes(router: Router, env: Env): void {
   });
 
   // ------------------------------------------------------------ GET /packs
+  // Team-wide: every approved user sees ALL non-archived packs (they can clone
+  // + co-edit any of them). requireUser already gates on approval upstream.
   router.get("/api/v1/packs", async ({ req }) => {
     const auth = await requireUser(req, env);
     if (auth instanceof Response) return auth;
 
-    const me = auth.user.discordId;
-    const filter =
-      auth.user.role === "admin"
-        ? { archivedAt: null }
-        : { archivedAt: null, $or: [{ ownerDiscordId: me }, { "members.discordId": me }] };
-
     const packs = await packsCol();
-    const list = await packs.find(filter).sort({ updatedAt: -1 }).limit(200).toArray();
+    const list = await packs.find({ archivedAt: null }).sort({ updatedAt: -1 }).limit(200).toArray();
     return json({ packs: list.map(publicPack) });
   });
 
@@ -127,6 +131,8 @@ export function registerPackRoutes(router: Router, env: Env): void {
   });
 
   // -------------------------------------------------- PATCH /packs/:packId
+  // owner/editor — i.e. every approved team member (default editor) plus the
+  // owner; explicit "viewer" members are blocked by canEditPack.
   router.patch("/api/v1/packs/:packId", async ({ req, params }) => {
     const auth = await requireUser(req, env);
     if (auth instanceof Response) return auth;
@@ -289,6 +295,8 @@ export function registerPackRoutes(router: Router, env: Env): void {
   });
 
   // ----------------------------------------- POST /packs/:packId/revisions
+  // owner/editor — every approved team member commits new revisions by
+  // default; explicit "viewer" members are blocked by canEditPack.
   router.post("/api/v1/packs/:packId/revisions", async ({ req, params }) => {
     const auth = await requireUser(req, env);
     if (auth instanceof Response) return auth;

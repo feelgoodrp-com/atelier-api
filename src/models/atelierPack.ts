@@ -3,9 +3,12 @@
  * atelierRevisions (immutable snapshots); headRevision 0 means "no revisions
  * yet". Deleting a pack archives it (archivedAt set) — never destroys data.
  *
- * Roles: the owner (creator) has full control, members are "editor"
- * (may PATCH + create revisions) or "viewer" (read-only). Global admins
- * bypass all pack role checks as if they were the owner.
+ * Roles (team-wide model): every approved user has "editor" access to ALL
+ * packs by default (may PATCH + create revisions) — the whole team can
+ * co-edit. An explicit member entry can DOWNGRADE a user to "viewer"
+ * (read-only). The owner (creator) keeps full control (members/publish/
+ * archive). Global admins bypass all pack role checks as if they were the
+ * owner.
  */
 
 import { col } from "../mongodb";
@@ -72,11 +75,17 @@ export function publicPack(p: AtelierPack) {
   };
 }
 
-/** Effective pack role for a user, or null when no access at all. */
-export function packRoleFor(pack: AtelierPack, user: AtelierUser): PackAccessRole | null {
+/**
+ * Effective pack role for a user. Team-wide default: every approved user is
+ * an "editor" on every pack. owner/admin keep full control; an explicit
+ * member entry can downgrade a user to "viewer". Never returns null — access
+ * gating happens upstream via requireUser (approved users only).
+ */
+export function packRoleFor(pack: AtelierPack, user: AtelierUser): PackAccessRole {
   if (user.role === "admin" || pack.ownerDiscordId === user.discordId) return "owner";
   const member = pack.members.find((m) => m.discordId === user.discordId);
-  return member ? member.role : null;
+  if (member) return member.role;
+  return "editor"; // team default: every approved user may co-edit
 }
 
 export function canEditPack(role: PackAccessRole | null): boolean {
