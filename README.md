@@ -23,7 +23,7 @@ Device-Tokens, User-Freischaltung, Admin-Verwaltung samt **Web-Admin-Dashboard**
 Server-Builds, Publish/Registry und Creative-Import.
 
 - **Runtime:** Bun (`Bun.serve`, kein Framework)
-- **Datenbank:** MongoDB (raw driver, kein ORM), DB `feelgoodrp`
+- **Datenbank:** MongoDB (raw driver, kein ORM), DB `atelier` (frei wählbar)
 - **Port:** `3095`
 - **Fehler-Konvention:** `{ "error": "message" }`
 
@@ -152,7 +152,7 @@ Bun lädt `.env` und `.env.local` automatisch. Vorlage: `.env.example`.
 | `PORT` | nein | `3095` | HTTP-Port |
 | `HOST` | nein | `127.0.0.1` | Bind-Adresse (Deployment: `0.0.0.0`) |
 | `MONGODB_URI` | **ja** | – | MongoDB-Connection-String (Atlas/lokal) |
-| `MONGODB_DB_NAME` | nein | `feelgoodrp` | Datenbankname |
+| `MONGODB_DB_NAME` | nein | `atelier` | Datenbankname (frei wählbar) |
 | `MONGODB_DNS_SERVERS` | nein | – | DNS-Override (z. B. `8.8.8.8`) bei `querySrv ECONNREFUSED` unter Bun/Windows |
 | `ATELIER_PUBLIC_ORIGIN` | nein | `http://127.0.0.1:3095` | Öffentliche Basis-URL (Discord-Redirect) |
 | `ATELIER_DISCORD_CLIENT_ID` | nein* | `CHANGEME` | Discord-App Client-ID |

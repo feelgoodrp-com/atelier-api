@@ -90,7 +90,7 @@ export function loadEnv(): Env {
     HOST: str("HOST", "127.0.0.1"),
     PORT: int("PORT", 3095, 1, 65535, errors),
     MONGODB_URI: required("MONGODB_URI"),
-    MONGODB_DB_NAME: str("MONGODB_DB_NAME", "feelgoodrp"),
+    MONGODB_DB_NAME: str("MONGODB_DB_NAME", "atelier"),
     MONGODB_DNS_SERVERS: list("MONGODB_DNS_SERVERS"),
     ATELIER_PUBLIC_ORIGIN: str("ATELIER_PUBLIC_ORIGIN", "http://127.0.0.1:3095").replace(/\/+$/u, ""),
     ATELIER_DISCORD_CLIENT_ID: str("ATELIER_DISCORD_CLIENT_ID", ""),
