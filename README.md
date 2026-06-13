@@ -1,10 +1,10 @@
 ﻿<div align="center">
 
-<img src="assets/atelier-logo.png" width="100" alt="atelier by feelgood" />
+<img src="assets/atelier-logo.png" width="100" alt="atelier" />
 
-# atelier-api <sub>· by feelgood</sub>
+# atelier-api
 
-**Das Backend für [atelier by feelgood](https://github.com/feelgoodrp-com/atelier)** —
+**Das Backend für [atelier](https://github.com/feelgoodrp-com/atelier)** —
 Discord-Login, Team-Cloud, Storage und Server-Builds für das
 GTA-V-Addon-Clothing-Tool.
 
@@ -269,7 +269,7 @@ curl http://127.0.0.1:3095/api/v1/internal/ping -H "x-fg-service-token: <ATELIER
 
 ## Discord-App anlegen
 
-1. <https://discord.com/developers/applications> → **New Application** → Name z. B. `atelier by feelgood`.
+1. <https://discord.com/developers/applications> → **New Application** → Name z. B. `atelier`.
 2. Links **OAuth2** öffnen.
 3. **Client ID** kopieren → `ATELIER_DISCORD_CLIENT_ID`.
 4. **Reset Secret** → **Client Secret** kopieren → `ATELIER_DISCORD_CLIENT_SECRET`.
@@ -333,12 +333,11 @@ atelier-api steht unter der **[PolyForm Noncommercial License 1.0.0](LICENSE.md)
 nutzen, verändern und teilen für **nicht-kommerzielle** Zwecke ist erlaubt —
 **Verkauf und kommerzielle Nutzung sind nicht gestattet** (Copyright-Hinweis aus
 der Lizenz bitte beibehalten). Teil von
-[atelier by feelgood](https://github.com/feelgoodrp-com/atelier). Abhängigkeiten
+[atelier](https://github.com/feelgoodrp-com/atelier). Abhängigkeiten
 (Bun, MongoDB-Driver, JSZip) stehen unter ihren jeweiligen Lizenzen.
 
 ## Credits
 
 Im Geiste von [grzyClothTool](https://github.com/grzybeek/grzyClothTool)
 (grzybeek), mit [CodeWalker](https://github.com/dexyfex/CodeWalker) (dexyfex) für
-die Build-Pipeline. Gebaut von der **feelgood-Community** — für alle. Fuck
-Gatekeeping.
+die Build-Pipeline. Entwickelt vom **feelgood-Team**.
