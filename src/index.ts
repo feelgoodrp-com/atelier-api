@@ -23,7 +23,9 @@ import { htmlPage } from "./web/pages";
 import { registerBuildRoutes } from "./routes/builds";
 import { registerRegistryRoutes } from "./routes/registry";
 import { registerImportCreativeRoutes } from "./routes/import-creative";
+import { registerAdminWebRoutes } from "./routes/admin-web";
 import { configureBuildQueue } from "./builds/queue";
+import { log } from "./logging/log";
 import {
   collabWebsocket,
   configureCollab,
@@ -119,6 +121,7 @@ async function main() {
   registerBuildRoutes(router, env);
   registerRegistryRoutes(router, env);
   registerImportCreativeRoutes(router, env);
+  registerAdminWebRoutes(router, env);
 
   configureClientIp(env.ATELIER_TRUST_PROXY);
   configureCollab(env);
@@ -156,8 +159,9 @@ async function main() {
     websocket: collabWebsocket,
   });
 
-  console.log(
-    `[atelier-api] v${pkg.version} listening on http://${server.hostname}:${server.port} ` +
+  log.info(
+    "server",
+    `v${pkg.version} läuft auf http://${server.hostname}:${server.port} ` +
       `(fakeAuth=${isDevFakeAuthActive(env)}, admins=${env.ATELIER_ADMIN_DISCORD_IDS.length})`,
   );
 

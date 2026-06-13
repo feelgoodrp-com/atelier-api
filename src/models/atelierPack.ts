@@ -38,6 +38,20 @@ export interface AtelierPackPublish {
   publishedAt: Date;
 }
 
+/**
+ * Admin-only server-build overrides (set via the web dashboard). Affect ONLY
+ * the server build of this pack; the desktop build is unaffected. Absent =
+ * defaults (byte-identical fxmanifest, resource name = dlcName/slug).
+ */
+export interface AtelierPackBuildConfig {
+  /** Override for the resource folder name (sanitized at build time). Empty = default. */
+  resourceName?: string;
+  /** Custom fxmanifest.lua template ({{files}}/{{data_files}} placeholders). Empty = default. */
+  fxmanifestTemplate?: string;
+  updatedAt: Date;
+  updatedByDiscordId: string;
+}
+
 export interface AtelierPack {
   packId: string;
   name: string;
@@ -49,6 +63,8 @@ export interface AtelierPack {
   headRevision: number;
   /** null = never published. */
   publish: AtelierPackPublish | null;
+  /** Admin server-build overrides; absent/null = defaults. */
+  buildConfig?: AtelierPackBuildConfig | null;
   createdAt: Date;
   updatedAt: Date;
   archivedAt: Date | null;

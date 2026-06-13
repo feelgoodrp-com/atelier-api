@@ -24,6 +24,7 @@ import { casPathFor } from "../storage/cas";
 import { logActivity } from "../models/activity";
 import { broadcastToPack } from "../ws/collab";
 import { buildFivemResourceZip, sanitizeDlcName, sanitizeResourceName } from "../cloth/fivem-export";
+import { log } from "../logging/log";
 
 let queueEnv: Env | null = null;
 const pending: string[] = []; // buildIds, FIFO
@@ -173,6 +174,49 @@ export async function ensureBuild(
   return build;
 }
 
+/**
+ * Force a rebuild of { packId, revision } even when a done artifact is cached
+ * — used by the admin dashboard after changing the build-config/fxmanifest (the
+ * cache key is only { packId, revision }, so config edits need an explicit
+ * rebuild). An in-flight build is returned as-is; otherwise the doc is reset
+ * and re-enqueued, or created when none exists yet.
+ */
+export async function forceRebuild(
+  packId: string,
+  revision: number,
+  requestedByDiscordId: string,
+): Promise<AtelierBuild> {
+  const builds = await buildsCol();
+  const existing = await builds.findOne({ packId, revision });
+  if (!existing) return ensureBuild(packId, revision, requestedByDiscordId);
+  if (existing.status === "queued" || existing.status === "running") return existing;
+
+  const reset = await builds.findOneAndUpdate(
+    { buildId: existing.buildId, status: { $in: ["error", "done"] } },
+    {
+      $set: {
+        status: "queued",
+        error: null,
+        sizeBytes: null,
+        artifactPath: null,
+        report: null,
+        startedAt: null,
+        finishedAt: null,
+        requestedByDiscordId,
+        createdAt: new Date(),
+      },
+      $inc: { attempts: 1 },
+    },
+    { returnDocument: "after" },
+  );
+  if (reset) {
+    notify(packId, reset.buildId, "queued");
+    enqueue(reset.buildId);
+    return reset;
+  }
+  return (await builds.findOne({ packId, revision })) ?? existing;
+}
+
 async function runBuild(buildId: string): Promise<void> {
   const builds = await buildsCol();
   const build = await builds.findOneAndUpdate(
@@ -182,6 +226,11 @@ async function runBuild(buildId: string): Promise<void> {
   );
   if (!build) return; // deleted or already taken
   notify(build.packId, buildId, "running");
+  log.info("build", `Build gestartet (pack ${build.packId.slice(0, 8)} rev ${build.revision})`, {
+    buildId,
+    packId: build.packId,
+    revision: build.revision,
+  });
 
   try {
     const packs = await packsCol();
@@ -207,10 +256,17 @@ async function runBuild(buildId: string): Promise<void> {
     // dlcName drives stream names + YMT hashes — it MUST match the desktop
     // build of the same revision (revision.dlcName, pushed from the project
     // settings). The slug is only the fallback for pre-Phase-3 revisions.
+    const buildCfg = pack.buildConfig ?? null;
     const dlcName = sanitizeDlcName(revision.dlcName ?? pack.slug);
+    // Admin build-config can override the resource folder name + fxmanifest.
+    // Empty/whitespace values fall back to the default (dlcName/slug).
+    const resourceName = sanitizeResourceName(
+      buildCfg?.resourceName?.trim() || revision.dlcName || pack.slug,
+    );
     const { zip, report } = await buildFivemResourceZip(revision.drawables, readAsset, {
       dlcName,
-      resourceName: sanitizeResourceName(revision.dlcName ?? pack.slug),
+      resourceName,
+      fxmanifestTemplate: buildCfg?.fxmanifestTemplate?.trim() || undefined,
     });
 
     // Write atomically: .part first, rename into place.
@@ -234,6 +290,13 @@ async function runBuild(buildId: string): Promise<void> {
       },
     );
     notify(build.packId, buildId, "done");
+    log.info(
+      "build",
+      `Build fertig (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ` +
+        `${(zip.byteLength / 1024).toFixed(0)} KiB, ${report.resources.length} Resource(s), ` +
+        `${report.warnings.length} Warnung(en)`,
+      { buildId, packId: build.packId, revision: build.revision },
+    );
     void logActivity("build.completed", build.requestedByDiscordId, {
       buildId,
       packId: build.packId,
@@ -249,6 +312,11 @@ async function runBuild(buildId: string): Promise<void> {
       { $set: { status: "error", error: message.slice(0, 500), finishedAt: new Date() } },
     );
     notify(build.packId, buildId, "error");
+    log.error(
+      "build",
+      `Build fehlgeschlagen (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ${message.slice(0, 200)}`,
+      { buildId, packId: build.packId, revision: build.revision },
+    );
     void logActivity("build.failed", build.requestedByDiscordId, {
       buildId,
       packId: build.packId,

@@ -41,6 +41,11 @@ function root(): string {
   return rootDir;
 }
 
+/** Absolute storage root (configured ATELIER_STORAGE_ROOT). For admin stats. */
+export function storageRoot(): string {
+  return root();
+}
+
 /** Create the cas/ + tmp/ directories (called once at startup). */
 export function ensureCasDirs(): void {
   mkdirSync(join(root(), "cas"), { recursive: true });

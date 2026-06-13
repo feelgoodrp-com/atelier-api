@@ -256,12 +256,36 @@ curl http://127.0.0.1:3095/api/v1/internal/ping -H "x-fg-service-token: <ATELIER
 2. Links **OAuth2** öffnen.
 3. **Client ID** kopieren → `ATELIER_DISCORD_CLIENT_ID`.
 4. **Reset Secret** → **Client Secret** kopieren → `ATELIER_DISCORD_CLIENT_SECRET`.
-5. Unter **Redirects** exakt eintragen:
-   `{ATELIER_PUBLIC_ORIGIN}/api/v1/auth/discord/callback`
-   (lokal also `http://127.0.0.1:3095/api/v1/auth/discord/callback`).
+5. Unter **Redirects** exakt eintragen (BEIDE):
+   - `{ATELIER_PUBLIC_ORIGIN}/api/v1/auth/discord/callback` — Desktop-App-Login
+   - `{ATELIER_PUBLIC_ORIGIN}/admin/callback` — Web-Admin-Dashboard
+   (lokal also `http://127.0.0.1:3095/api/v1/auth/discord/callback`
+   bzw. `http://127.0.0.1:3095/admin/callback`).
 6. Scope `identify` reicht — wird vom Service automatisch angefragt.
 7. `ATELIER_DEV_FAKE_AUTH=0` setzen (sobald echte Creds da sind, deaktiviert
    sich der Fake-Mode auch von selbst).
+
+## Admin-Dashboard (Web)
+
+Browser-Dashboard unter **`{ATELIER_PUBLIC_ORIGIN}/admin`** — Login nur fuer
+Discord-IDs aus `ATELIER_ADMIN_DISCORD_IDS` (eigener Discord-Web-Login getrennt
+vom Desktop-Loopback-Flow; signiertes HttpOnly-Session-Cookie, 12 h, Admin-Check
+bei jedem Request). Bietet:
+
+- **Uebersicht** — Speichergroesse (CAS/Builds/tmp) + Kennzahlen (Assets, Packs,
+  Revisionen, Builds, Nutzer).
+- **Logs** — Live-Server-Logs (SSE) + Aktivitaets-Audit (`atelierActivity`).
+- **Packs & Builds** — Server-Build pro Revision erzeugen/neu bauen, fertige
+  Pakete als **ZIP** herunterladen.
+- **fxmanifest & Build-Config** — pro Pack ein Resource-Name- und
+  `fxmanifest.lua`-Template-Override (Platzhalter `{{files}}` / `{{data_files}}`);
+  betrifft nur Server-Builds und greift beim naechsten Build. Ohne Override bleibt
+  das Manifest byte-identisch zum Desktop-Build.
+- **Nutzer** — freischalten / sperren.
+
+Voraussetzung: echte Discord-Creds + die `/admin/callback`-Redirect-URI (siehe
+oben). Lokal mit Fake-Auth loggt `/admin/login` direkt als
+`ATELIER_DEV_FAKE_DISCORD_ID` ein (muss in `ATELIER_ADMIN_DISCORD_IDS` stehen).
 
 ## Docker & CI
 

@@ -62,6 +62,14 @@ export interface FivemBuildOptions {
   generateShopMeta?: boolean;
   /** max drawables per (gender, slot) bucket per resource part, default 128 */
   splitAt?: number;
+  /**
+   * Optional fxmanifest override from the admin build-config. When set, the
+   * fxmanifest.lua is rendered from this template (placeholders {{data_files}}
+   * and {{files}} are substituted per part) instead of the default. UNSET keeps
+   * the byte-identical default manifest (mirror of the desktop build) — the
+   * override is strictly opt-in so untouched packs never diverge.
+   */
+  fxmanifestTemplate?: string;
 }
 
 /** Resolve a CAS asset to its bytes; null = missing on disk. */
@@ -167,6 +175,42 @@ function buildFxmanifest(shopMetaFiles: string[]): string {
     lines.push(`data_file 'SHOP_PED_APPAREL_META_FILE' '${metaFile}'`);
   }
   return `${lines.join("\n")}\n`;
+}
+
+/** The default fxmanifest as an editable template — shown in the admin editor. */
+export const DEFAULT_FXMANIFEST_TEMPLATE = `fx_version 'cerulean'
+game 'gta5'
+
+files {
+{{files}}
+}
+
+{{data_files}}`;
+
+const FILES_BLOCK = [
+  "  'stream/*.ydd',",
+  "  'stream/*.ytd',",
+  "  'stream/*.yld',",
+  "  'stream/*.meta',",
+  "  'stream/*.ymt'",
+].join("\n");
+
+/**
+ * Render an admin-provided fxmanifest template. Substitutes {{files}} (the
+ * streamed-asset globs) and {{data_files}} (one shop-meta data_file line per
+ * part-gender) and guarantees a trailing newline. Used ONLY when a pack has a
+ * custom template configured — see FivemBuildOptions.fxmanifestTemplate.
+ */
+export function renderFxmanifestTemplate(template: string, shopMetaFiles: string[]): string {
+  const dataFiles = shopMetaFiles
+    .map((f) => `data_file 'SHOP_PED_APPAREL_META_FILE' '${f}'`)
+    .join("\n");
+  let out = template
+    .replace(/\{\{\s*files\s*\}\}/gu, FILES_BLOCK)
+    .replace(/\{\{\s*data_files\s*\}\}/gu, dataFiles);
+  // Normalize CRLF (editor paste) and ensure exactly one trailing newline.
+  out = out.replace(/\r\n/gu, "\n").replace(/\s*$/u, "");
+  return `${out}\n`;
 }
 
 /** Shop-meta component entry (mirror of sidecar PlanComponent subset). */
@@ -462,7 +506,12 @@ export async function buildFivemResourceZip(
     // documented in-band for whoever unpacks the artifact.
     stream.file("ATELIER_README.txt", buildStreamReadme({ dlc: part.dlc, genders: part.genders }));
 
-    root.file("fxmanifest.lua", buildFxmanifest(shopMetaFiles));
+    root.file(
+      "fxmanifest.lua",
+      options.fxmanifestTemplate
+        ? renderFxmanifestTemplate(options.fxmanifestTemplate, shopMetaFiles)
+        : buildFxmanifest(shopMetaFiles),
+    );
     root.file(
       "atelier-build.json",
       JSON.stringify(
