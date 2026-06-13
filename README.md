@@ -49,6 +49,8 @@ atelier-api/
 │   ├── auth/
 │   │   ├── jwt.ts          HS256 JWT sign/verify (node:crypto, 0 deps)
 │   │   ├── device-auth.ts  atelierDevices + refresh-token rotation
+│   │   ├── discord.ts      reusable Discord OAuth helpers (web admin login)
+│   │   ├── admin-web.ts    /admin browser session (cookie) + CSRF + admin gate
 │   │   └── require.ts      requireUser / requireAdmin / requireService
 │   ├── models/
 │   │   ├── atelierUser.ts  atelierUsers (pending/approved/locked)
@@ -60,7 +62,13 @@ atelier-api/
 │   │   ├── atelierLock.ts  atelierLocks (advisory locks)
 │   │   ├── atelierBuild.ts atelierBuilds (server-build cache)
 │   │   └── activity.ts     atelierActivity (audit log)
-│   ├── storage/cas.ts      Content-addressed storage (+ casImportFile)
+│   ├── storage/
+│   │   ├── cas.ts          Content-addressed storage (+ casImportFile)
+│   │   └── stats.ts        disk-usage stats for the admin overview
+│   ├── logging/log.ts      in-memory ring-buffer log (admin live logs + SSE)
+│   ├── web/
+│   │   ├── pages.ts        public HTML (landing + OAuth error pages)
+│   │   └── admin/pages.ts  admin login + dashboard shell HTML
 │   ├── cloth/fivem-export.ts  FiveM resource builder (without YMTs, see below)
 │   ├── builds/queue.ts     In-process build queue (concurrency, artifacts)
 │   ├── ws/collab.ts        WebSocket rooms (presence, locks, build-status)
@@ -76,7 +84,9 @@ atelier-api/
 │       ├── locks.ts        drawable locks
 │       ├── builds.ts       server builds (status + artifact ZIP)
 │       ├── registry.ts     registry for community websites (service lane)
-│       └── import-creative.ts  one-shot import from creative
+│       ├── import-creative.ts  one-shot import from creative
+│       └── admin-web.ts    /admin dashboard (HTML + /api/v1/admin/web/* + assets)
+├── assets/admin/           dashboard styles + client script (app.css, app.js)
 └── scripts/
     ├── smoke.ts            E2E smoke test against a running server
     └── sync-roundtrip.ts   push/pull roundtrip (pack, chunk upload, revision, download)
@@ -305,6 +315,35 @@ on every request). It offers:
 Requirement: real Discord creds + the `/admin/callback` redirect URI (see above).
 Locally with fake auth, `/admin/login` logs in directly as
 `ATELIER_DEV_FAKE_DISCORD_ID` (which must be in `ATELIER_ADMIN_DISCORD_IDS`).
+
+### Admin routes
+
+Browser pages (cookie session, gated on `ATELIER_ADMIN_DISCORD_IDS`):
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/admin` | login page, or the dashboard when signed in |
+| GET | `/admin/login` | → Discord OAuth (or the dev fake login) |
+| GET | `/admin/callback` | Discord callback; sets the session cookie |
+| GET | `/admin/logout` | clears the session |
+| GET | `/admin/app.css`, `/admin/app.js` | static dashboard assets |
+
+JSON API — all under `/api/v1/admin/web/`, cookie-authed; mutations also require a
+same-origin request:
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `…/overview` | version, uptime, storage stats, counts |
+| GET | `…/activity?limit=` | activity audit log (`atelierActivity`) |
+| GET | `…/logs` | server-log ring-buffer snapshot |
+| GET | `…/logs/stream` | live server logs (SSE) |
+| GET | `…/packs` | pack list |
+| GET | `…/packs/:packId` | pack detail (revisions, builds, build config) |
+| POST | `…/packs/:packId/builds` | `{ revision, force? }` → trigger/rebuild a server build |
+| PUT | `…/packs/:packId/build-config` | `{ resourceName, fxmanifestTemplate }` → fxmanifest override |
+| GET | `…/builds` | all server builds |
+| GET | `…/builds/:buildId/download` | artifact ZIP |
+| GET / POST | `…/users` · `…/users/:discordId/approve` · `…/users/:discordId/lock` | user management |
 
 ## Docker & CI
 
