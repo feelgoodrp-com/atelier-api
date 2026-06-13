@@ -1,9 +1,26 @@
-﻿# atelier-api
+﻿<div align="center">
 
-Backend-Service für **atelier by feelgood** — das GTA-V-Addon-Clothing-Tool
-(Tauri-Desktop-App + kollaboratives Backend). Discord-Login, Device-Tokens,
-User-Freischaltung, Admin-Verwaltung, CAS-Uploads, Packs/Revisionen, Locks,
-WebSocket-Collab sowie Server-Builds, Publish/Registry und Creative-Import.
+<img src="assets/atelier-logo.png" width="100" alt="atelier by feelgood" />
+
+# atelier-api <sub>· by feelgood</sub>
+
+**Das Backend für [atelier by feelgood](https://github.com/feelgoodrp-com/atelier)** —
+Discord-Login, Team-Cloud, Storage und Server-Builds für das
+GTA-V-Addon-Clothing-Tool.
+
+[![License: PolyForm NC 1.0.0](https://img.shields.io/badge/License-PolyForm%20NC%201.0.0-5865F2)](LICENSE.md)
+&nbsp;![Bun](https://img.shields.io/badge/Bun-1.x-1f1f1f)
+&nbsp;![MongoDB](https://img.shields.io/badge/MongoDB-1f1f1f)
+&nbsp;![Port 3095](https://img.shields.io/badge/Port-3095-1f1f1f)
+
+</div>
+
+---
+
+Kollaboratives Backend für die atelier-Desktop-App: Discord-Login,
+Device-Tokens, User-Freischaltung, Admin-Verwaltung samt **Web-Admin-Dashboard**
+(`/admin`), CAS-Uploads, Packs/Revisionen, Locks, WebSocket-Collab sowie
+Server-Builds, Publish/Registry und Creative-Import.
 
 - **Runtime:** Bun (`Bun.serve`, kein Framework)
 - **Datenbank:** MongoDB (raw driver, kein ORM), DB `feelgoodrp`
@@ -309,3 +326,19 @@ oben). Lokal mit Fake-Auth loggt `/admin/login` direkt als
   `mongo:7`-Service-Container, plus `docker build` als reines
   Dockerfile-Gate. Es wird BEWUSST kein Image in eine Registry gepusht —
   das Deployment baut das Image direkt auf dem Zielhost aus dem Repo.
+
+## Lizenz
+
+atelier-api steht unter der **[PolyForm Noncommercial License 1.0.0](LICENSE.md)**:
+nutzen, verändern und teilen für **nicht-kommerzielle** Zwecke ist erlaubt —
+**Verkauf und kommerzielle Nutzung sind nicht gestattet** (Copyright-Hinweis aus
+der Lizenz bitte beibehalten). Teil von
+[atelier by feelgood](https://github.com/feelgoodrp-com/atelier). Abhängigkeiten
+(Bun, MongoDB-Driver, JSZip) stehen unter ihren jeweiligen Lizenzen.
+
+## Credits
+
+Im Geiste von [grzyClothTool](https://github.com/grzybeek/grzyClothTool)
+(grzybeek), mit [CodeWalker](https://github.com/dexyfex/CodeWalker) (dexyfex) für
+die Build-Pipeline. Gebaut von der **feelgood-Community** — für alle. Fuck
+Gatekeeping.
