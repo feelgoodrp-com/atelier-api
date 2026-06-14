@@ -1,6 +1,6 @@
 /**
  * GET /api/v1/me — works for pending users (the desktop app needs this to
- * render the "Warte auf Freischaltung" screen).
+ * render the "Waiting for approval" screen).
  */
 
 import type { Router } from "../router";

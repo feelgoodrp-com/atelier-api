@@ -3,7 +3,7 @@
  * human actually SEES (OAuth flow errors, the landing page). Matches the
  * desktop login: hero video backdrop (GET /hero.webm) under a gradient veil,
  * big atelier branding on the left, a glass status card on the right; logo via
- * GET /logo.png, German copy. JSON stays the contract for API clients; these
+ * GET /logo.png, English copy. JSON stays the contract for API clients; these
  * pages are only returned where a browser is the consumer.
  */
 
@@ -42,7 +42,7 @@ export function renderPageHtml(opts: PageOptions): string {
   const badge = opts.badge ? `<span class="badge">${escapeHtml(opts.badge)}</span>` : "";
 
   return `<!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -134,7 +134,7 @@ export function renderPageHtml(opts: PageOptions): string {
       <img class="logo" src="/logo.png" alt="" draggable="false"
            onerror="this.style.display='none'" />
       <div class="wordmark"><b>atelier</b><span>by feelgood</span>${badge}</div>
-      <p class="tag">Sync-Server der atelier-Desktop-App.</p>
+      <p class="tag">Sync server for the atelier desktop app.</p>
     </div>
     <main class="card">
       ${VARIANT_ICON[opts.variant]}
@@ -160,8 +160,8 @@ export function htmlPage(opts: PageOptions, status = 200): Response {
 export function htmlAuthError(status: number, message: string, code?: string): Response {
   return htmlPage(
     {
-      title: "atelier — Anmeldung fehlgeschlagen",
-      heading: "Anmeldung fehlgeschlagen",
+      title: "atelier — Sign-in failed",
+      heading: "Sign-in failed",
       message,
       variant: "error",
       detail: code,

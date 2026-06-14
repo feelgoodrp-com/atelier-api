@@ -226,7 +226,7 @@ async function runBuild(buildId: string): Promise<void> {
   );
   if (!build) return; // deleted or already taken
   notify(build.packId, buildId, "running");
-  log.info("build", `Build gestartet (pack ${build.packId.slice(0, 8)} rev ${build.revision})`, {
+  log.info("build", `Build started (pack ${build.packId.slice(0, 8)} rev ${build.revision})`, {
     buildId,
     packId: build.packId,
     revision: build.revision,
@@ -292,9 +292,9 @@ async function runBuild(buildId: string): Promise<void> {
     notify(build.packId, buildId, "done");
     log.info(
       "build",
-      `Build fertig (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ` +
-        `${(zip.byteLength / 1024).toFixed(0)} KiB, ${report.resources.length} Resource(s), ` +
-        `${report.warnings.length} Warnung(en)`,
+      `Build done (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ` +
+        `${(zip.byteLength / 1024).toFixed(0)} KiB, ${report.resources.length} resource(s), ` +
+        `${report.warnings.length} warning(s)`,
       { buildId, packId: build.packId, revision: build.revision },
     );
     void logActivity("build.completed", build.requestedByDiscordId, {
@@ -314,7 +314,7 @@ async function runBuild(buildId: string): Promise<void> {
     notify(build.packId, buildId, "error");
     log.error(
       "build",
-      `Build fehlgeschlagen (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ${message.slice(0, 200)}`,
+      `Build failed (pack ${build.packId.slice(0, 8)} rev ${build.revision}): ${message.slice(0, 200)}`,
       { buildId, packId: build.packId, revision: build.revision },
     );
     void logActivity("build.failed", build.requestedByDiscordId, {

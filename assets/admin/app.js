@@ -31,15 +31,15 @@
   function fmtDate(iso) {
     if (!iso) return "–";
     const d = new Date(iso);
-    return d.toLocaleDateString("de-DE") + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    return d.toLocaleDateString("en-GB") + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
   }
   function ago(iso) {
     if (!iso) return "–";
     const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-    if (s < 60) return "gerade eben";
-    if (s < 3600) return "vor " + Math.floor(s / 60) + " Min";
-    if (s < 86400) return "vor " + Math.floor(s / 3600) + " Std";
-    return "vor " + Math.floor(s / 86400) + " Tagen";
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s / 60) + " min ago";
+    if (s < 86400) return Math.floor(s / 3600) + " h ago";
+    return Math.floor(s / 86400) + " days ago";
   }
 
   let toastTimer;
@@ -62,17 +62,17 @@
     return body;
   }
 
-  const STATUS_LABEL = { done: "fertig", error: "Fehler", running: "läuft", queued: "wartet" };
+  const STATUS_LABEL = { done: "done", error: "error", running: "running", queued: "queued" };
   function badge(status) {
     return '<span class="badge badge-' + esc(status) + '"><span class="dot"></span>' +
       esc(STATUS_LABEL[status] || status) + "</span>";
   }
   function loading() { view.innerHTML = '<div class="empty"><span class="spinner"></span></div>'; }
-  function errorView(e) { view.innerHTML = '<div class="card"><div class="empty">Fehler: ' + esc(e.message) + "</div></div>"; }
+  function errorView(e) { view.innerHTML = '<div class="card"><div class="empty">Error: ' + esc(e.message) + "</div></div>"; }
 
   /* ----------------------------------------------------------- overview */
   async function viewOverview() {
-    setHead("Übersicht", "Server-Status, Speicher und Kennzahlen");
+    setHead("Overview", "Server status, storage and key metrics");
     loading();
     let d;
     try { d = await api("/overview"); } catch (e) { return errorView(e); }
@@ -83,22 +83,22 @@
       (extra ? '<div class="extra">' + esc(extra) + "</div>" : "") + "</div>";
     view.innerHTML =
       '<div class="grid cols-4">' +
-        tile("Speicher gesamt", fmtBytes(st.totalBytes), "", st.cas.files + st.builds.files + st.tmp.files + " Dateien") +
+        tile("Total storage", fmtBytes(st.totalBytes), "", st.cas.files + st.builds.files + st.tmp.files + " files") +
         tile("Assets (CAS)", c.assets, "", fmtBytes(st.cas.bytes)) +
-        tile("Builds", c.builds.done, "fertig", st.builds.files + " ZIPs · " + fmtBytes(st.builds.bytes)) +
-        tile("Packs", c.packs, "", c.revisions + " Revisionen") +
+        tile("Builds", c.builds.done, "done", st.builds.files + " ZIPs · " + fmtBytes(st.builds.bytes)) +
+        tile("Packs", c.packs, "", c.revisions + " revisions") +
       "</div>" +
       '<div class="grid cols-4" style="margin-top:18px">' +
-        tile("Nutzer", c.users.total, "", c.users.approved + " freigeschaltet") +
-        tile("Wartet auf Freigabe", c.users.pending, "", c.users.locked + " gesperrt") +
-        tile("Version", d.version, "", "läuft seit " + uptime(d.uptimeSec)) +
-        tile("tmp (Uploads)", fmtBytes(st.tmp.bytes), "", st.tmp.files + " Dateien") +
+        tile("Users", c.users.total, "", c.users.approved + " approved") +
+        tile("Awaiting approval", c.users.pending, "", c.users.locked + " locked") +
+        tile("Version", d.version, "", "up for " + uptime(d.uptimeSec)) +
+        tile("tmp (uploads)", fmtBytes(st.tmp.bytes), "", st.tmp.files + " files") +
       "</div>" +
-      '<div class="card" style="margin-top:18px"><div class="card-h"><h2>Speicher-Aufschlüsselung</h2>' +
+      '<div class="card" style="margin-top:18px"><div class="card-h"><h2>Storage breakdown</h2>' +
         '<span class="hint mono">' + esc(st.root) + "</span></div>" +
-        bar("CAS-Assets", st.cas.bytes, st.totalBytes) +
-        bar("Build-Artefakte", st.builds.bytes, st.totalBytes) +
-        bar("Temporär (tmp)", st.tmp.bytes, st.totalBytes) +
+        bar("CAS assets", st.cas.bytes, st.totalBytes) +
+        bar("Build artifacts", st.builds.bytes, st.totalBytes) +
+        bar("Temporary (tmp)", st.tmp.bytes, st.totalBytes) +
       "</div>";
   }
   function uptime(s) {
@@ -121,10 +121,10 @@
   function closeSse() { if (sse) { sse.close(); sse = null; } }
 
   async function viewLogs() {
-    setHead("Logs", "Server-Logs (live) und Aktivitätsprotokoll");
+    setHead("Logs", "Server logs (live) and activity log");
     view.innerHTML =
-      '<div class="tabs"><div class="tab active" data-tab="server">Server-Logs</div>' +
-      '<div class="tab" data-tab="activity">Aktivität</div></div><div id="logpane"></div>';
+      '<div class="tabs"><div class="tab active" data-tab="server">Server logs</div>' +
+      '<div class="tab" data-tab="activity">Activity</div></div><div id="logpane"></div>';
     view.querySelectorAll(".tab").forEach((t) =>
       t.addEventListener("click", () => {
         view.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
@@ -137,8 +137,8 @@
   async function logServer() {
     closeSse();
     const pane = document.getElementById("logpane");
-    pane.innerHTML = '<div class="card"><div class="card-h"><h2>Server-Logs</h2>' +
-      '<span class="hint">live · letzte 500 Zeilen</span></div><div class="logbox" id="logbox"></div></div>';
+    pane.innerHTML = '<div class="card"><div class="card-h"><h2>Server logs</h2>' +
+      '<span class="hint">live · last 500 lines</span></div><div class="logbox" id="logbox"></div></div>';
     const boxEl = document.getElementById("logbox");
     const render = (e) => {
       const atBottom = boxEl.scrollHeight - boxEl.scrollTop - boxEl.clientHeight < 40;
@@ -171,29 +171,29 @@
       "<tr><td class='muted mono'>" + fmtDate(a.ts) + "</td><td><b>" + esc(a.type) + "</b></td>" +
       "<td class='mono'>" + esc(a.actorDiscordId) + "</td><td class='muted mono' style='font-size:11px'>" +
       esc(JSON.stringify(a.data || {})) + "</td></tr>").join("");
-    pane.innerHTML = '<div class="card"><div class="card-h"><h2>Aktivität</h2><span class="hint">' +
-      (d.items ? d.items.length : 0) + " Einträge</span></div>" +
-      (rows ? '<table class="table"><thead><tr><th>Zeit</th><th>Aktion</th><th>Akteur</th><th>Details</th></tr></thead><tbody>' +
-        rows + "</tbody></table>" : '<div class="empty">Noch keine Aktivität.</div>') + "</div>";
+    pane.innerHTML = '<div class="card"><div class="card-h"><h2>Activity</h2><span class="hint">' +
+      (d.items ? d.items.length : 0) + " entries</span></div>" +
+      (rows ? '<table class="table"><thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>Details</th></tr></thead><tbody>' +
+        rows + "</tbody></table>" : '<div class="empty">No activity yet.</div>') + "</div>";
   }
 
   /* -------------------------------------------------------------- packs */
   async function viewPacks() {
-    setHead("Packs & Builds", "Server-Builds erzeugen und Pakete herunterladen");
+    setHead("Packs & Builds", "Create server builds and download packages");
     loading();
     let d;
     try { d = await api("/packs"); } catch (e) { return errorView(e); }
-    if (!d.packs.length) { view.innerHTML = '<div class="card"><div class="empty">Noch keine Packs.</div></div>'; return; }
+    if (!d.packs.length) { view.innerHTML = '<div class="card"><div class="empty">No packs yet.</div></div>'; return; }
     const rows = d.packs.map((p) =>
       '<tr style="cursor:pointer" data-pack="' + esc(p.packId) + '">' +
       "<td><b>" + esc(p.name) + "</b><div class='muted mono' style='font-size:11px'>" + esc(p.slug) + "</div></td>" +
       "<td class='mono'>" + esc(p.ownerDiscordId) + "</td>" +
       "<td>" + (p.headRevision || "–") + "</td>" +
-      "<td>" + (p.hasBuildConfig ? '<span class="badge badge-running"><span class="dot"></span>angepasst</span>' : '<span class="muted">Standard</span>') + "</td>" +
-      "<td style='text-align:right'><span class='muted'>öffnen ›</span></td></tr>").join("");
-    view.innerHTML = '<div class="card"><div class="card-h"><h2>Alle Packs</h2><span class="hint">' +
-      d.packs.length + ' Packs</span></div><table class="table"><thead><tr><th>Pack</th><th>Owner</th>' +
-      "<th>Head-Rev</th><th>Build-Config</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+      "<td>" + (p.hasBuildConfig ? '<span class="badge badge-running"><span class="dot"></span>custom</span>' : '<span class="muted">Default</span>') + "</td>" +
+      "<td style='text-align:right'><span class='muted'>open ›</span></td></tr>").join("");
+    view.innerHTML = '<div class="card"><div class="card-h"><h2>All packs</h2><span class="hint">' +
+      d.packs.length + ' packs</span></div><table class="table"><thead><tr><th>Pack</th><th>Owner</th>' +
+      "<th>Head rev</th><th>Build config</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
     view.querySelectorAll("[data-pack]").forEach((r) =>
       r.addEventListener("click", () => { location.hash = "#pack/" + r.dataset.pack; }));
   }
@@ -208,8 +208,8 @@
     const revRows = d.revisions.length ? d.revisions.map((r) => {
       const b = d.builds.find((x) => x.revision === r.revision);
       const dl = b && b.status === "done"
-        ? '<a class="btn btn-sm btn-primary" href="' + API + "/builds/" + esc(b.buildId) + '/download">ZIP laden</a>' : "";
-      const st = b ? badge(b.status) : '<span class="muted">kein Build</span>';
+        ? '<a class="btn btn-sm btn-primary" href="' + API + "/builds/" + esc(b.buildId) + '/download">Download ZIP</a>' : "";
+      const st = b ? badge(b.status) : '<span class="muted">no build</span>';
       const sz = b && b.sizeBytes ? "<span class='muted mono' style='font-size:11px'>" + fmtBytes(b.sizeBytes) + "</span>" : "";
       return "<tr><td><b>r" + r.revision + "</b>" + (r.revision === p.headRevision ? ' <span class="badge badge-done"><span class="dot"></span>head</span>' : "") +
         "<div class='muted' style='font-size:11px'>" + esc(r.message || "") + "</div></td>" +
@@ -217,28 +217,28 @@
         "<td class='muted mono' style='font-size:11px'>" + esc(r.dlcName || "–") + "</td>" +
         "<td>" + st + " " + sz + "</td>" +
         "<td style='text-align:right'><div class='row' style='justify-content:flex-end'>" +
-        '<button class="btn btn-sm" data-build="' + r.revision + '">' + (b ? "neu bauen" : "bauen") + "</button>" + dl +
+        '<button class="btn btn-sm" data-build="' + r.revision + '">' + (b ? "rebuild" : "build") + "</button>" + dl +
         "</div></td></tr>";
     }).join("") : "";
     view.innerHTML =
-      '<div class="back" id="back">‹ zurück zu Packs</div>' +
+      '<div class="back" id="back">‹ back to packs</div>' +
       '<div class="card"><div class="card-h"><h2>' + esc(p.name) + '</h2><span class="hint mono">' + esc(p.slug) + "</span></div>" +
       (revRows ? '<table class="table"><thead><tr><th>Revision</th><th>Drawables</th><th>DLC</th><th>Build</th><th></th></tr></thead><tbody>' +
-        revRows + "</tbody></table>" : '<div class="empty">Dieser Pack hat noch keine Revisionen.</div>') + "</div>" +
+        revRows + "</tbody></table>" : '<div class="empty">This pack has no revisions yet.</div>') + "</div>" +
       // fxmanifest editor
-      '<div class="card"><div class="card-h"><h2>fxmanifest & Build-Config</h2>' +
-        '<span class="hint">gilt für Server-Builds dieses Packs</span></div>' +
-        '<div class="field"><label>Resource-Name (optional)</label>' +
-        '<input type="text" id="resName" placeholder="Standard: DLC-Name" value="' + esc(cfg.resourceName || "") + '">' +
-        '<div class="desc">Überschreibt den Ordner-/Resource-Namen. Leer = Standard.</div></div>' +
-        '<div class="field"><label>fxmanifest.lua Template</label>' +
+      '<div class="card"><div class="card-h"><h2>fxmanifest & build config</h2>' +
+        '<span class="hint">applies to server builds of this pack</span></div>' +
+        '<div class="field"><label>Resource name (optional)</label>' +
+        '<input type="text" id="resName" placeholder="Default: DLC name" value="' + esc(cfg.resourceName || "") + '">' +
+        '<div class="desc">Overrides the folder / resource name. Empty = default.</div></div>' +
+        '<div class="field"><label>fxmanifest.lua template</label>' +
         '<textarea id="fxTpl" spellcheck="false" placeholder="' + esc(d.defaultTemplate) + '">' + esc(cfg.fxmanifestTemplate || "") + "</textarea>" +
-        '<div class="desc">Platzhalter <span class="mono">{{files}}</span> (Stream-Globs) und <span class="mono">{{data_files}}</span> ' +
-        '(Shop-Meta-Zeilen) werden beim Build ersetzt. Leer = Standard-Manifest (byte-identisch zum Desktop-Build).</div></div>' +
-        '<div class="row"><button class="btn btn-primary" id="saveCfg">Speichern</button>' +
-        '<button class="btn" id="rebuildCfg">Speichern & Head neu bauen</button>' +
-        '<button class="btn" id="loadDefault">Default einfügen</button>' +
-        '<button class="btn" id="resetCfg">Zurücksetzen</button></div>' +
+        '<div class="desc">Placeholders <span class="mono">{{files}}</span> (stream globs) and <span class="mono">{{data_files}}</span> ' +
+        '(shop-meta lines) are substituted at build time. Empty = default manifest (byte-identical to the desktop build).</div></div>' +
+        '<div class="row"><button class="btn btn-primary" id="saveCfg">Save</button>' +
+        '<button class="btn" id="rebuildCfg">Save & rebuild head</button>' +
+        '<button class="btn" id="loadDefault">Insert default</button>' +
+        '<button class="btn" id="resetCfg">Reset</button></div>' +
       "</div>";
     document.getElementById("back").addEventListener("click", () => { location.hash = "#packs"; });
     view.querySelectorAll("[data-build]").forEach((btn) =>
@@ -257,14 +257,14 @@
         method: "PUT", headers: { "content-type": "application/json" },
         body: JSON.stringify({ resourceName, fxmanifestTemplate }),
       });
-      toast("Build-Config gespeichert", "ok");
+      toast("Build config saved", "ok");
       if (rebuild) {
-        if (!headRev) { toast("Keine Revision zum Bauen", "err"); return; }
+        if (!headRev) { toast("No revision to build", "err"); return; }
         await api("/packs/" + encodeURIComponent(packId) + "/builds", {
           method: "POST", headers: { "content-type": "application/json" },
           body: JSON.stringify({ revision: "head", force: true }),
         });
-        toast("Neuer Build gestartet — gleich im Build-Tab", "ok");
+        toast("New build started — see the Build tab shortly", "ok");
       }
       viewPack(packId);
     } catch (e) { toast(e.message, "err"); }
@@ -275,7 +275,7 @@
         method: "PUT", headers: { "content-type": "application/json" },
         body: JSON.stringify({ resourceName: "", fxmanifestTemplate: "" }),
       });
-      toast("Auf Standard zurückgesetzt", "ok"); viewPack(packId);
+      toast("Reset to default", "ok"); viewPack(packId);
     } catch (e) { toast(e.message, "err"); }
   }
   async function triggerBuild(packId, revision, btn) {
@@ -285,9 +285,9 @@
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ revision, force: true }),
       });
-      toast("Build " + (r.build.status === "done" ? "fertig" : "gestartet") + " (r" + revision + ")", "ok");
+      toast("Build " + (r.build.status === "done" ? "done" : "started") + " (r" + revision + ")", "ok");
       pollPack(packId);
-    } catch (e) { toast(e.message, "err"); btn.disabled = false; btn.textContent = "bauen"; }
+    } catch (e) { toast(e.message, "err"); btn.disabled = false; btn.textContent = "build"; }
   }
   // Refresh the pack view a few times so queued/running builds settle to done.
   let pollTimer;
@@ -307,52 +307,52 @@
 
   /* ------------------------------------------------------------- builds */
   async function viewBuilds() {
-    setHead("Pakete", "Alle Server-Builds zum Herunterladen");
+    setHead("Packages", "All server builds available for download");
     loading();
     let d;
     try { d = await api("/builds"); } catch (e) { return errorView(e); }
-    if (!d.builds.length) { view.innerHTML = '<div class="card"><div class="empty">Noch keine Builds erzeugt.</div></div>'; return; }
+    if (!d.builds.length) { view.innerHTML = '<div class="card"><div class="empty">No builds created yet.</div></div>'; return; }
     const rows = d.builds.map((b) =>
       "<tr><td><b>" + esc(b.packName || b.packId) + "</b></td><td>r" + b.revision + "</td><td>" + badge(b.status) + "</td>" +
       "<td class='mono'>" + (b.sizeBytes ? fmtBytes(b.sizeBytes) : "–") + "</td>" +
       "<td class='muted'>" + ago(b.finishedAt) + "</td><td style='text-align:right'>" +
-      (b.status === "done" ? '<a class="btn btn-sm btn-primary" href="' + API + "/builds/" + esc(b.buildId) + '/download">ZIP laden</a>' :
-        b.status === "error" ? "<span class='muted' title='" + esc(b.error || "") + "'>fehlgeschlagen</span>" : "<span class='muted'>…</span>") +
+      (b.status === "done" ? '<a class="btn btn-sm btn-primary" href="' + API + "/builds/" + esc(b.buildId) + '/download">Download ZIP</a>' :
+        b.status === "error" ? "<span class='muted' title='" + esc(b.error || "") + "'>failed</span>" : "<span class='muted'>…</span>") +
       "</td></tr>").join("");
-    view.innerHTML = '<div class="card"><div class="card-h"><h2>Server-Builds</h2><span class="hint">' +
-      d.builds.length + ' Builds</span></div><table class="table"><thead><tr><th>Pack</th><th>Rev</th><th>Status</th>' +
-      "<th>Größe</th><th>fertig</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+    view.innerHTML = '<div class="card"><div class="card-h"><h2>Server builds</h2><span class="hint">' +
+      d.builds.length + ' builds</span></div><table class="table"><thead><tr><th>Pack</th><th>Rev</th><th>Status</th>' +
+      "<th>Size</th><th>Finished</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
 
   /* -------------------------------------------------------------- users */
   async function viewUsers() {
-    setHead("Nutzer", "Freigaben und Sperren");
+    setHead("Users", "Approvals and locks");
     loading();
     let d;
     try { d = await api("/users"); } catch (e) { return errorView(e); }
     const rows = d.users.map((u) => {
       const av = u.avatar ? '<img src="' + esc(u.avatar) + '" style="width:26px;height:26px;border-radius:50%">' :
         '<div style="width:26px;height:26px;border-radius:50%;background:#5865f2"></div>';
-      const st = u.status === "approved" ? '<span class="badge badge-done"><span class="dot"></span>frei</span>' :
-        u.status === "locked" ? '<span class="badge badge-error"><span class="dot"></span>gesperrt</span>' :
-        '<span class="badge badge-queued"><span class="dot"></span>wartet</span>';
+      const st = u.status === "approved" ? '<span class="badge badge-done"><span class="dot"></span>approved</span>' :
+        u.status === "locked" ? '<span class="badge badge-error"><span class="dot"></span>locked</span>' :
+        '<span class="badge badge-queued"><span class="dot"></span>pending</span>';
       let act = "";
-      if (u.status !== "approved") act += '<button class="btn btn-sm btn-primary" data-approve="' + esc(u.discordId) + '">freischalten</button> ';
-      if (u.status !== "locked") act += '<button class="btn btn-sm" data-lock="' + esc(u.discordId) + '">sperren</button>';
+      if (u.status !== "approved") act += '<button class="btn btn-sm btn-primary" data-approve="' + esc(u.discordId) + '">approve</button> ';
+      if (u.status !== "locked") act += '<button class="btn btn-sm" data-lock="' + esc(u.discordId) + '">lock</button>';
       return "<tr><td><div class='row'>" + av + "<b>" + esc(u.username) + "</b></div></td>" +
         "<td class='mono'>" + esc(u.discordId) + "</td><td>" + st + "</td>" +
         "<td>" + (u.role === "admin" ? '<span class="badge badge-running"><span class="dot"></span>admin</span>' : "member") + "</td>" +
         "<td style='text-align:right'>" + act + "</td></tr>";
     }).join("");
-    view.innerHTML = '<div class="card"><div class="card-h"><h2>Nutzer</h2><span class="hint">' +
-      d.users.length + ' gesamt</span></div><table class="table"><thead><tr><th>Name</th><th>Discord-ID</th>' +
-      "<th>Status</th><th>Rolle</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+    view.innerHTML = '<div class="card"><div class="card-h"><h2>Users</h2><span class="hint">' +
+      d.users.length + ' total</span></div><table class="table"><thead><tr><th>Name</th><th>Discord ID</th>' +
+      "<th>Status</th><th>Role</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
     const act = async (id, path, label) => {
       try { await api("/users/" + encodeURIComponent(id) + path, { method: "POST", headers: { "content-type": "application/json" } });
         toast(label, "ok"); viewUsers(); } catch (e) { toast(e.message, "err"); }
     };
-    view.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => act(b.dataset.approve, "/approve", "Freigeschaltet")));
-    view.querySelectorAll("[data-lock]").forEach((b) => b.addEventListener("click", () => act(b.dataset.lock, "/lock", "Gesperrt")));
+    view.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => act(b.dataset.approve, "/approve", "Approved")));
+    view.querySelectorAll("[data-lock]").forEach((b) => b.addEventListener("click", () => act(b.dataset.lock, "/lock", "Locked")));
   }
 
   /* ------------------------------------------------------------- router */

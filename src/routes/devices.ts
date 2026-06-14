@@ -37,7 +37,7 @@ function parseDeviceInfo(raw: unknown): DeviceInfo {
     return typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, maxLen) : fallback;
   };
   return {
-    name: pick("name", "Unbenanntes Gerät"),
+    name: pick("name", "Unnamed device"),
     platform: pick("platform", "unknown"),
     appVersion: pick("appVersion", "0.0.0"),
   };

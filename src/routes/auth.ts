@@ -69,7 +69,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
     if (!isLoopbackRedirectUri(redirectUri)) {
       return htmlAuthError(
         400,
-        "Die Rücksprungadresse ist ungültig. Starte die Anmeldung bitte erneut aus der atelier-App.",
+        "The return address is invalid. Please start the sign-in again from the atelier app.",
         "invalid_redirect_uri",
       );
     }
@@ -81,7 +81,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
       if (!devId || !/^\d{5,25}$/u.test(devId)) {
         return htmlAuthError(
           500,
-          "Der Dev-Fake-Login ist nicht vollständig konfiguriert (ATELIER_DEV_FAKE_DISCORD_ID fehlt).",
+          "The dev fake login is not fully configured (ATELIER_DEV_FAKE_DISCORD_ID is missing).",
           "dev_fake_discord_id_not_configured",
         );
       }
@@ -94,7 +94,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
     if (!hasDiscordCredentials(env)) {
       return htmlAuthError(
         500,
-        "Die Discord-Anmeldung ist auf diesem Server noch nicht konfiguriert. Bitte beim Admin melden.",
+        "Discord sign-in is not configured on this server yet. Please contact the admin.",
         "discord_not_configured",
       );
     }
@@ -125,7 +125,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
   // Browser-visited endpoint: errors render as styled HTML pages, not JSON.
   router.get("/api/v1/auth/discord/callback", async ({ req, url }) => {
     const retryHint =
-      "Starte die Anmeldung bitte erneut aus der atelier-App — der Vorgang ist abgelaufen oder unvollständig.";
+      "Please start the sign-in again from the atelier app — the process has expired or is incomplete.";
     const code = url.searchParams.get("code") ?? "";
     const stateToken = url.searchParams.get("state") ?? "";
     if (!code || !stateToken) return htmlAuthError(400, retryHint, "missing_code_or_state");
@@ -158,7 +158,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
       console.error("[atelier-api] discord token exchange failed:", tokenRes.status, await tokenRes.text());
       return htmlAuthError(
         502,
-        "Discord hat die Anmeldung nicht bestätigt. Bitte versuche es in einem Moment erneut.",
+        "Discord did not confirm the sign-in. Please try again in a moment.",
         "discord_token_exchange_failed",
       );
     }
@@ -166,7 +166,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
     if (!tokenBody.access_token) {
       return htmlAuthError(
         502,
-        "Discord hat die Anmeldung nicht bestätigt. Bitte versuche es in einem Moment erneut.",
+        "Discord did not confirm the sign-in. Please try again in a moment.",
         "discord_token_exchange_failed",
       );
     }
@@ -179,7 +179,7 @@ export function registerAuthRoutes(router: Router, env: Env): void {
       console.error("[atelier-api] discord /users/@me failed:", meRes.status);
       return htmlAuthError(
         502,
-        "Dein Discord-Profil konnte nicht geladen werden. Bitte versuche es in einem Moment erneut.",
+        "Your Discord profile could not be loaded. Please try again in a moment.",
         "discord_user_fetch_failed",
       );
     }

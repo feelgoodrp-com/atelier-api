@@ -93,7 +93,7 @@ export function registerAdminWebRoutes(router: Router, env: Env): void {
       const id = env.ATELIER_DEV_FAKE_DISCORD_ID;
       if (!id || !isEnvAdmin(env, id)) {
         return adminHtml(
-          renderAdminLogin({ error: "Dev-Fake-Login: ATELIER_DEV_FAKE_DISCORD_ID ist kein Admin." }),
+          renderAdminLogin({ error: "Dev fake login: ATELIER_DEV_FAKE_DISCORD_ID is not an admin." }),
           403,
         );
       }
@@ -105,7 +105,7 @@ export function registerAdminWebRoutes(router: Router, env: Env): void {
 
     if (!hasDiscordCredentials(env)) {
       return adminHtml(
-        renderAdminLogin({ error: "Der Discord-Login ist auf diesem Server nicht konfiguriert." }),
+        renderAdminLogin({ error: "Discord login is not configured on this server." }),
         500,
       );
     }
@@ -121,18 +121,18 @@ export function registerAdminWebRoutes(router: Router, env: Env): void {
     const code = url.searchParams.get("code") ?? "";
     const stateToken = url.searchParams.get("state") ?? "";
     if (!code || !stateToken || !verifyAdminState(req, env, stateToken)) {
-      return fail(400, "Login abgelaufen oder ungültig. Bitte erneut versuchen.");
+      return fail(400, "Login expired or invalid. Please try again.");
     }
 
     const accessToken = await exchangeDiscordCode(env, code, adminCallbackUrl(env));
-    if (!accessToken) return fail(502, "Discord hat die Anmeldung nicht bestätigt. Bitte erneut versuchen.");
+    if (!accessToken) return fail(502, "Discord did not confirm the sign-in. Please try again.");
 
     const profile = await fetchDiscordProfile(accessToken);
-    if (!profile) return fail(502, "Dein Discord-Profil konnte nicht geladen werden. Bitte erneut versuchen.");
+    if (!profile) return fail(502, "Your Discord profile could not be loaded. Please try again.");
 
     if (!isEnvAdmin(env, profile.id)) {
       void logActivity("admin_web_denied", profile.id, { username: profile.username });
-      return fail(403, "Kein Zugriff — dein Discord-Konto ist kein Server-Admin.");
+      return fail(403, "No access — your Discord account is not a server admin.");
     }
 
     const user = await upsertLoginUser(env, profile.id, profile.username, profile.avatar);

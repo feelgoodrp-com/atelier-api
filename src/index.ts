@@ -68,9 +68,9 @@ async function main() {
   router.get("/", () =>
     htmlPage({
       title: "atelier-api",
-      heading: "atelier-api läuft",
+      heading: "atelier-api is running",
       message:
-        "Das ist der Sync-Server der atelier-Desktop-App. Hier gibt es nichts zu sehen — die Magie passiert in der App.",
+        "This is the sync server for the atelier desktop app. Nothing to see here — the magic happens in the app.",
       variant: "ok",
       badge: `v${pkg.version}`,
     }),
@@ -161,7 +161,7 @@ async function main() {
 
   log.info(
     "server",
-    `v${pkg.version} läuft auf http://${server.hostname}:${server.port} ` +
+    `v${pkg.version} running on http://${server.hostname}:${server.port} ` +
       `(fakeAuth=${isDevFakeAuthActive(env)}, admins=${env.ATELIER_ADMIN_DISCORD_IDS.length})`,
   );
 

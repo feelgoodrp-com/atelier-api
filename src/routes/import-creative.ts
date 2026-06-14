@@ -158,7 +158,7 @@ export function registerImportCreativeRoutes(router: Router, env: Env): void {
       const label = d.label?.trim() || d.exportYddName || `Drawable ${i + 1}`;
 
       if (!d.yddDiskPath) {
-        skipped.push(`${label}: keine YDD-Datei hinterlegt`);
+        skipped.push(`${label}: no YDD file provided`);
         continue;
       }
       const yddName =
@@ -167,7 +167,7 @@ export function registerImportCreativeRoutes(router: Router, env: Env): void {
           : basename(d.yddDiskPath);
       const ydd = await importAsset(d.yddDiskPath, "ydd", yddName);
       if (!ydd) {
-        skipped.push(`${label}: YDD-Datei fehlt auf der Festplatte (${d.yddDiskPath})`);
+        skipped.push(`${label}: YDD file is missing on disk (${d.yddDiskPath})`);
         continue;
       }
 
@@ -179,7 +179,7 @@ export function registerImportCreativeRoutes(router: Router, env: Env): void {
             : basename(rel);
         const tex = await importAsset(rel, "ytd", ytdName);
         if (tex) textures.push(tex);
-        else skipped.push(`${label}: YTD-Datei fehlt auf der Festplatte (${rel})`);
+        else skipped.push(`${label}: YTD file is missing on disk (${rel})`);
       }
 
       const componentId = typeof d.componentId === "number" ? d.componentId : 11;
@@ -225,7 +225,7 @@ export function registerImportCreativeRoutes(router: Router, env: Env): void {
       packId: pack.packId,
       revision: 1,
       parentRevision: 0,
-      message: `Import aus creative (${packProject.resourceName})`,
+      message: `Import from creative (${packProject.resourceName})`,
       // No project settings exist for imports — builds fall back to the slug.
       dlcName: null,
       createdByDiscordId: auth.user.discordId,

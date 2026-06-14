@@ -37,7 +37,7 @@ export function renderAdminDashboard(session: AdminWebSession, version: string):
     ? `<img class="avatar" src="${escapeHtml(session.avatar)}" alt="" referrerpolicy="no-referrer" />`
     : `<div class="avatar"></div>`;
   return `<!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -51,11 +51,11 @@ export function renderAdminDashboard(session: AdminWebSession, version: string):
   <aside class="sidebar">
     <div class="brand"><img src="/logo.png" alt="" /><div><b>atelier</b> <span>admin</span></div></div>
     <nav class="nav">
-      ${navItem("overview", "Übersicht")}
+      ${navItem("overview", "Overview")}
       ${navItem("logs", "Logs")}
       ${navItem("packs", "Packs &amp; Builds")}
-      ${navItem("builds", "Pakete")}
-      ${navItem("users", "Nutzer")}
+      ${navItem("builds", "Packages")}
+      ${navItem("users", "Users")}
     </nav>
     <div class="sidebar-foot">
       <div class="who">
@@ -64,11 +64,11 @@ export function renderAdminDashboard(session: AdminWebSession, version: string):
       </div>
       <a class="nav-item" href="/admin/logout" style="margin-top:6px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        <span>Abmelden</span></a>
+        <span>Sign out</span></a>
     </div>
   </aside>
   <main class="main">
-    <div class="topbar"><div><h1 id="title">Übersicht</h1><div class="sub" id="subtitle"></div></div>
+    <div class="topbar"><div><h1 id="title">Overview</h1><div class="sub" id="subtitle"></div></div>
       <div class="row"><span class="badge badge-done"><span class="dot"></span>v${escapeHtml(version)}</span></div></div>
     <div class="content"><div id="view"></div></div>
   </main>
@@ -82,14 +82,14 @@ export function renderAdminDashboard(session: AdminWebSession, version: string):
 export function renderAdminLogin(opts: { error?: string } = {}): string {
   const notice = opts.error
     ? `<div class="notice">${escapeHtml(opts.error)}</div>`
-    : `<p class="message">Dieser Bereich ist nur für Administratoren. Melde dich mit deinem Discord-Konto an.</p>`;
+    : `<p class="message">This area is for administrators only. Sign in with your Discord account.</p>`;
   return `<!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex" />
-<title>atelier-api — Admin-Login</title>
+<title>atelier-api — Admin login</title>
 <link rel="icon" href="/logo.png" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -141,12 +141,12 @@ export function renderAdminLogin(opts: { error?: string } = {}): string {
     <div class="brand">
       <img class="logo" src="/logo.png" alt="" draggable="false" />
       <div class="wordmark"><b>atelier</b><span>by feelgood</span><span class="adminchip">Admin</span></div>
-      <p class="tag">Verwaltung des Sync-Servers — Logs, Speicher, Builds.</p>
+      <p class="tag">Sync server administration — logs, storage, builds.</p>
     </div>
     <main class="card">
-      <h1>Admin-Login</h1>
+      <h1>Admin login</h1>
       ${notice}
-      <a class="discord-btn" href="/admin/login">${DISCORD_MARK}<span>Mit Discord anmelden</span></a>
+      <a class="discord-btn" href="/admin/login">${DISCORD_MARK}<span>Sign in with Discord</span></a>
       <div class="foot">atelier-api</div>
     </main>
   </div>
