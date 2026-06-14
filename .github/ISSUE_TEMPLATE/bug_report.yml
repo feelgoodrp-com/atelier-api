@@ -1,0 +1,29 @@
+name: 🐛 Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you call/do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Endpoint / action ...
+        2. Request body ...
+        3. Response / error ...
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: e.g. v0.1.0 or a commit hash
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant server logs or the `{ "error": "…" }` response. Redact secrets.
