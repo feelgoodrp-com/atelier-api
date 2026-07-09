@@ -17,7 +17,7 @@ export const DRAWABLE_SLOT_TYPES = [
 ] as const;
 export type DrawableSlotType = (typeof DRAWABLE_SLOT_TYPES)[number];
 
-const MAX_DRAWABLES = 500;
+const MAX_DRAWABLES = 5000;
 const MAX_TEXTURES = 26; // letters a..z
 
 export interface RevisionAssetRef {
