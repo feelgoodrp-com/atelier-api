@@ -36,11 +36,11 @@
  *
  * SPLIT SEMANTICS (mirror of sidecar BuildPlanner):
  *   1. Per gender, the ADDON drawables are taken in revision order as one
- *      flat list and chunked into groups of `splitAt` (default 128).
+ *      flat list and chunked into groups of `splitAt` (default 256).
  *   2. Part k contains chunk k of the male list plus chunk k of the female
  *      list; the number of parts is the max chunk count over both genders.
  *      No (gender, slot) bucket inside one part can exceed splitAt — the
- *      game-side limit of 128 drawables per (dlc, gender, slot).
+ *      game-side limit of 256 drawables per (dlc, gender, slot).
  *   3. With more than one part, EVERY part gets the suffix _part<N> (1-based)
  *      on both the resource folder and the dlcName.
  *   4. Stream NNN numbering restarts per (part, gender, slot), so each part
@@ -53,14 +53,14 @@
 import JSZip from "jszip";
 import type { RevisionDrawable } from "../models/atelierRevision";
 
-export const DEFAULT_SPLIT_AT = 128;
+export const DEFAULT_SPLIT_AT = 256;
 
 export interface FivemBuildOptions {
   dlcName: string;
   resourceName: string;
   /** default true */
   generateShopMeta?: boolean;
-  /** max drawables per (gender, slot) bucket per resource part, default 128 */
+  /** max drawables per (gender, slot) bucket per resource part, default 256 */
   splitAt?: number;
   /**
    * Optional fxmanifest override from the admin build-config. When set, the
