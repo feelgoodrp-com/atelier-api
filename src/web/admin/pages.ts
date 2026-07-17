@@ -32,10 +32,20 @@ function navItem(route: string, label: string): string {
 }
 
 /** The dashboard shell. The session identity is rendered server-side (escaped). */
-export function renderAdminDashboard(session: AdminWebSession, version: string): string {
+export function renderAdminDashboard(
+  session: AdminWebSession,
+  version: string,
+  update?: { updateAvailable: boolean; latest: string | null },
+): string {
   const avatar = session.avatar
     ? `<img class="avatar" src="${escapeHtml(session.avatar)}" alt="" referrerpolicy="no-referrer" />`
     : `<div class="avatar"></div>`;
+  const updateBadge = update?.updateAvailable
+    ? `<a href="https://github.com/feelgoodrp-com/atelier-api" target="_blank" rel="noreferrer"
+         title="Redeploy this server to update"
+         style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;text-decoration:none;color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:4px 11px">
+         <span style="width:6px;height:6px;border-radius:50%;background:#fbbf24"></span>Update available${update.latest ? ` · v${escapeHtml(update.latest)}` : ""}</a>`
+    : "";
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -69,7 +79,7 @@ export function renderAdminDashboard(session: AdminWebSession, version: string):
   </aside>
   <main class="main">
     <div class="topbar"><div><h1 id="title">Overview</h1><div class="sub" id="subtitle"></div></div>
-      <div class="row"><span class="badge badge-done"><span class="dot"></span>v${escapeHtml(version)}</span></div></div>
+      <div class="row" style="gap:8px">${updateBadge}<span class="badge badge-done"><span class="dot"></span>v${escapeHtml(version)}</span></div></div>
     <div class="content"><div id="view"></div></div>
   </main>
 </div>

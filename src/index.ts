@@ -20,6 +20,7 @@ import { registerPackRoutes } from "./routes/packs";
 import { registerPresenceRoutes } from "./routes/presence";
 import { registerLockRoutes } from "./routes/locks";
 import { htmlPage } from "./web/pages";
+import { startUpdateChecks, getUpdateStatus, checkForUpdate } from "./version-check";
 import { registerBuildRoutes } from "./routes/builds";
 import { registerRegistryRoutes } from "./routes/registry";
 import { registerImportCreativeRoutes } from "./routes/import-creative";
@@ -60,21 +61,37 @@ async function main() {
 
   const router = new Router(env);
 
-  router.get("/health", () =>
-    json({ ok: true, service: "atelier-api", version: pkg.version }),
-  );
+  router.get("/health", () => {
+    const u = getUpdateStatus();
+    return json({
+      ok: true,
+      service: "atelier-api",
+      version: pkg.version,
+      updateAvailable: u.updateAvailable,
+      latestVersion: u.latest,
+    });
+  });
+
+  // Update status — the desktop app / monitoring reads this to show a
+  // "server update available" hint. `?refresh=1` forces a fresh check.
+  router.get("/api/v1/version", async ({ url }) => {
+    if (url.searchParams.get("refresh") === "1") await checkForUpdate();
+    return json(getUpdateStatus());
+  });
 
   // Browser-facing landing page (humans hitting the base URL).
-  router.get("/", () =>
-    htmlPage({
+  router.get("/", () => {
+    const u = getUpdateStatus();
+    return htmlPage({
       title: "atelier-api",
       heading: "atelier-api is running",
-      message:
-        "This is the sync server for the atelier desktop app. Nothing to see here — the magic happens in the app.",
-      variant: "ok",
-      badge: `v${pkg.version}`,
-    }),
-  );
+      message: u.updateAvailable
+        ? `An update is available (running v${u.current}, latest v${u.latest}). Redeploy this server to update.`
+        : "This is the sync server for the atelier desktop app. Nothing to see here — the magic happens in the app.",
+      variant: u.updateAvailable ? "info" : "ok",
+      badge: u.updateAvailable ? `v${u.current} · update available` : `v${pkg.version}`,
+    });
+  });
 
   // Logo for the HTML pages + the app's loopback success page.
   const logoFile = Bun.file(new URL("../assets/atelier-logo.png", import.meta.url));
@@ -127,6 +144,7 @@ async function main() {
   configureCollab(env);
   configureBuildQueue(env);
   startLockExpirySweep();
+  startUpdateChecks();
 
   const server = Bun.serve({
     hostname: env.HOST,

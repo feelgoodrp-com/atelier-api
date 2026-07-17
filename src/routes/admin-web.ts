@@ -52,6 +52,7 @@ import { computeStorageStats } from "../storage/stats";
 import { recentLogs, subscribeLogs } from "../logging/log";
 import { DEFAULT_FXMANIFEST_TEMPLATE } from "../cloth/fivem-export";
 import { renderAdminDashboard, renderAdminLogin, adminHtml } from "../web/admin/pages";
+import { getUpdateStatus } from "../version-check";
 
 const startedAt = Date.now();
 const MAX_TEMPLATE_LEN = 20000;
@@ -82,7 +83,7 @@ export function registerAdminWebRoutes(router: Router, env: Env): void {
 
   router.get("/admin", ({ req }) => {
     const s = readAdminSession(req, env);
-    return adminHtml(s ? renderAdminDashboard(s, pkg.version) : renderAdminLogin());
+    return adminHtml(s ? renderAdminDashboard(s, pkg.version, getUpdateStatus()) : renderAdminLogin());
   });
 
   router.get("/admin/login", async ({ req }) => {
