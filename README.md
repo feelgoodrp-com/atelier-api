@@ -13,6 +13,10 @@ addon-clothing tool.
 &nbsp;![MongoDB](https://img.shields.io/badge/MongoDB-1f1f1f)
 &nbsp;![Port 3095](https://img.shields.io/badge/Port-3095-1f1f1f)
 
+[**atelier**](https://github.com/feelgoodrp-com/atelier) ·
+[In-game viewer](https://github.com/feelgoodrp-com/atelier-fivem) ·
+[Discord](https://discord.gg/blpd)
+
 </div>
 
 ---
